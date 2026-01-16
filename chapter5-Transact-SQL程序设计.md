@@ -3,7 +3,6 @@
 什么是Transact-SQL?
 
 
-
 + Transact-SQL（又称 T-SQL），是在 Microsoft SQL Server 和 Sybase SQL Server 上的 ANSI SQL 实现，与 Oracle 的 PL/SQL 性质相近（不只是实现ANSI SQL，也为自身数据库系统的特性提供实现支持），在 Microsoft SQL Server 和 Sybase Adaptive Server 中仍然被使用为核心的查询语言。
 + T-SQL是Microsoft公司在关系型数据库管理系统SQL Server中的SQL-3标准的实现，是微软对SQL的扩展,具有SQL的主要特点，同时增加了变量、运算符、函数、流程控制和注释等语言元素，使得其功能更加强大。T-SQL对SQL Server 十分重要，SQL Server中使用图形界面能够完成的所有功能，都可以利用T-SQL来实现。使用T-SQL操作时，与SQL Server通信的所有应用程序都通过向服务器发送T-SQL语句来进行，而与应用程序的界面无关。
 
@@ -46,7 +45,7 @@ SELECT @变量的名称=表达式[ ,...n]
 
 ### 4 函数
 
-#### 字符函数
+#### 字符函数（SUBSTRING, LTRIM, RTRIM, RIGHT, LEFT, UPPER, LOWER, REVERSE, SPACE, STUFF, CHARINDEX, LEN, ASCII, CHAR）
 + SUBSTRING 函数
   + 格式：SUBSTRING (<字符表达式>,<m>[,<n>])
   + 功能：从字符表达式中的第m个字符开始截取n个字符，形成一个新字符串，m,n都是数值表达式。
@@ -104,7 +103,7 @@ SELECT @变量的名称=表达式[ ,...n]
   + 功能： 用于将ASCII码转换为字符，整数表达式的取值
   范围为0到255之间的整数，返回字符型数据值。
 
-#### 数学函数
+#### 数学函数（ABS, EXP, SQRT, ROUND, RAND）
 + ABS函数
   + 格式：ABS(数字表达式)
   + 功能： 返回给定数字表达式的绝对值。
@@ -127,7 +126,7 @@ SELECT @变量的名称=表达式[ ,...n]
 
 
 
-#### 日期和时间函数
+#### 日期和时间函数（DATEADD, GETDATE, DAY, YEAR, MONTH）
 
 + DATEADD函数
   + 格式： DATEADD (日期参数, 数字, 日期)
@@ -146,7 +145,7 @@ SELECT @变量的名称=表达式[ ,...n]
   + 功能：返回表示指定日期中的月份的整数。返回类型为int。
 
 
-#### 数据转换函数
+#### 数据转换函数（CAST, CONVERT）
 
 + CAST函数
   + 格式：CAST (表达式 AS 数据类型 )
@@ -155,7 +154,7 @@ SELECT @变量的名称=表达式[ ,...n]
   + 格式：CONVERT (数据类型[(长度)], 表达式[,样式])
   + 功能：样式是指日期格式样式。
 
-#### 系统函数
+#### 系统函数（@@IDENTITY, DB_NAME, HOST_NAME, HOST_ID, USER_NAME）
 + 函数DB_NAME()的功能是返回数据库的名称。
 + 函数HOST_ NAME()的功能是返回服务器端计算机的名
 + 函数HOST_ID()的功能是返回服务器端计算机的ID号。
@@ -182,7 +181,30 @@ END
 ```
 功能：
 
-BEGIN...END 语句将多个SQL 语句组合成一组语句块，并将些语句块视为一个单元。BEGIN...END 语句块允许嵌
+BEGIN...END 语句将多个SQL 语句组合成一组语句块，并将些语句块视为一个单元。BEGIN...END 语句块允许嵌套。
+
+
+例子：
+```sql
+BEGIN
+    DECLARE @i INT
+    SET @i = 1
+    WHILE @i <= 5
+    BEGIN
+        PRINT '当前值为：' + CAST(@i AS VARCHAR)
+        SET @i = @i + 1
+    END
+END
+```
+
+```sql
+IF @score >= 60
+BEGIN
+    PRINT '及格';
+    PRINT '继续学习';
+END
+```
+
 
 ### IF...ELSE语句
 格式
@@ -197,6 +219,15 @@ IF 逻辑表达式
 
 IF...ELSE语句是双分支条件判断语句，根据某个条件的
 成立与否，来决定执行哪组语句。
+
+
+```sql
+IF @score >= 60
+    PRINT '及格'
+ELSE
+    PRINT '不及格'
+```
+
 
 ### CASE语句
 
@@ -228,12 +259,20 @@ END
 2. 简单 CASE 函数的执行过程：
 计算 Input_表达式的值，按书写顺序计算每个逻辑条“Input_表达式= when_表达式”。 返回第一个使逻辑条件“Input_表达式=when_表达式”为TRUE的 result_表达式。如果所有的逻辑条件“Input_表达式= when_表达式”为FLASE，则返回ELSE 后的result_表达式n；如果没有指定 ELSE 子句，则返回 NULL 值。
 3. CASE 搜索函数的执行过程：
-按顺序计算每个 WHEN 子句的逻辑表达式。返回第一个使逻辑表
-达式为 TRUE的 result_表达式。 如果所有的逻辑表达式FLASE，则返回ELSE 后的result_表达式n；如果没有指定ELSE 子句，则返回NULL 值。
+按顺序计算每个 WHEN 子句的逻辑表达式。返回第一个使逻辑表达式为 TRUE的 result_表达式。 如果所有的逻辑表达式FLASE，则返回ELSE 后的result_表达式n；如果没有指定ELSE 子句，则返回NULL 值。
+
+```sql
+SELECT name,
+       CASE
+           WHEN score >= 90 THEN '优秀'
+           WHEN score >= 60 THEN '及格'
+           ELSE '不及格'
+       END AS level
+FROM SC;
+```
 
 
-
-### goto语句
+### GOTO语句
 格式
 ```
 GOTO label - -改变执行
@@ -243,6 +282,17 @@ label : - -定义标签
 功能:
 
 GOTO语句将程序流程直接跳到指定标签处。标签定义位置可以在 GOTO 之前或之后。标签符可以为数字与字符的组合，但必须以“：”结尾。在GOTO语句之后的标签不能跟“：”。GOTO 语句和标签可在过程、批处理或语句块中的任何位置使用,但不可跳转到批处理之外的标签处。GOTO语句可嵌套使用。
+
+
+```sql
+IF @x < 0
+    GOTO err;
+
+PRINT '正常';
+
+err:
+PRINT '出错';
+```
 
 ### WHILE… CONTINUE…BREAK语句
 格式
@@ -261,17 +311,127 @@ END
 3. CONTINUE语句回到循环的第一行命令，忽略CONTINUE 关键字后面的任何语句，重新开始循环。
 
 
+例子：
+```sql
+DECLARE @i INT = 1;
 
-## 用户自定义函数
+WHILE @i <= 5
+BEGIN
+    PRINT @i;
+    SET @i = @i + 1;
+END
+```
 
 
-1、标量函数
+## 用户自定义函数(CREATE FUNCTION)
 
+
+### 标量函数
+
+
+**格式**
+```
+CREATE FUNCTION [schema_name.] 函数名
+([{ @形参名1[AS]数据类型1[=默认值]}[,…n]])
+RETURNS 返回值的类型
+[ WITH <{ ENCRYPTION | SCHEMABINDING }> [,…n]]
+[AS]
+BEGIN
+  函数体
+  RETURN 标量表达式
+END
+```
+
+
+
+
+
+**标量函数的调用**
+
+1. 在SELECT语句中调用
+格式：SELECT 架构的名称.函数名（实参1,…,实参n）
+说明：实参可为已赋值的局部变量或表达式。实参与形参要顺序一致。
+2. 使用EXEC语句调用
+格式1：EXEC 架构的名称.函数名 实参1,…,实参n
+格式2：EXEC 架构的名称.函数名 形参1=实参1,…,形参
+n=实参n
+说明：格式1要求实参与形参顺序一致，格式2的参数顺序可与定义时的参数顺序不一致。
+
+
+例子：
+```sql
+CREATE FUNCTION dbo.fn_add(@a INT, @b INT)
+RETURNS INT
+AS
+BEGIN
+    RETURN @a + @b;
+END
+```
+调用：
+```sql
+SELECT dbo.fn_add(3, 5);
+```
+
+
+### 内嵌表值函数
+
+**格式**
+```
+CREATE FUNCTION [schema_name.] 函数名
+([{ @参数名1[AS]数据类型1[=默认值]}[,…n]])
+RETURNS 表
+[ WITH <{ ENCRYPTION | SCHEMABINDING }>
+[,…n]]
+[ AS ]
+RETURN [ (内嵌表) ]
+```
+
+
+**标量函数的调用**
+
+
+在内嵌表值函数中，返回值是一个表。内嵌函数体没有相关联的返回变量。通过SELECT语句返回内嵌表。RETURN [(内嵌表) ] 定义了单个 SELECT 语句，它是返回
+值。
+
+
+
+函数调用
+```
+select * from [数据库名][.拥有者](实参1,…实参n)
+```
+说明：
+内嵌表值函数只能使用SELECT语句调用。
+
+例查询课程“数据结构”的成绩列表。
+```sql
+SELECT * FROM coursegrade('数据结构')
+```
+
+
+例子：
+```sql
+CREATE FUNCTION dbo.fn_student(@dept NVARCHAR(20))
+RETURNS TABLE
+AS
+RETURN
+(
+    SELECT *
+    FROM Student
+    WHERE Department = @dept
+);
+```
+调用：
+```sql
+SELECT *
+FROM dbo.fn_student('计算机');
+```
 
 
 
 
 ## 嵌入式SQL（游标）
+
+游标是嵌入式 SQL 中用于逐行处理查询结果集的一种机制。
 
 
 **为什么要使用嵌入式SQL**
@@ -364,14 +524,12 @@ From s Where sno = :stu_no;
 + 当前行：活动集中当前处理的那一行，游标即是指向当前行的指针。
 
 游标的分类：
-+ 滚动游标：游标的位置可以来回移动，可在活动集中去任意元
-组
++ 滚动游标：游标的位置可以来回移动，可在活动集中去任意元组
 + 非滚动游标：只能在活动集中顺序的取下一个元组
-+ 更新游标：数据库对游标指向的当前行加锁，当程序读下一行
-时，本行数据解锁，下一行加锁。
++ 更新游标：数据库对游标指向的当前行加锁，当程序读下一行时，本行数据解锁，下一行加锁。
 
 
-#### 定义游标
+#### 定义游标(DECLARE CURSOR)
 
 定义一个游标，使之对应一个select语句
 ```sql
@@ -390,7 +548,14 @@ End_Exec
 + READ ONLY：在 UPDATE 或 DELETE 语句的 WHERE
 CURRENT OF 子句中不能引用游标。UPDATE [OF column_name[,...n ]]：定义游标内可更新的列。如果指定 OF column name[,...n ] 参数，则只允许修改所列出的列。如果在 UPDATE 中未指定列的列表，则可以更新所有列。
 
-#### 打开游标
+
+```sql
+EXEC SQL DECLARE cur_student CURSOR FOR
+    SELECT sno, score
+    FROM SC;
+```
+
+#### 打开游标(OPEN)
 
 打开一个游标，执行游标对应的查询，结果集合为游标的活动集
 ```sql
@@ -406,7 +571,13 @@ cursor_name指的是全局游标，否则 cursor_name指的是局部
 + cursor_variable_name 游标变量的名称，该名称引用一个游标。
 
 
-#### 游标的推进语句
+
+```sql
+EXEC SQL OPEN cur_student;
+```
+执行 SELECT,把结果放入游标,指针指向“第一行之前”
+
+#### 游标的推进/取出语句（FETCH）
 
 在活动集中将游标推进到特定的行，并取出该行数据放到相应的宿主变量中
 
@@ -434,7 +605,13 @@ End_Exec
 + INTO @variable_name [,...n ]允许将提取操作的列数据放到局部变量中。
 
 
-#### 游标的关闭语句
+```sql
+EXEC SQL FETCH cur_student
+    INTO :sno, :score;
+```
+
+
+#### 游标的关闭语句（CLOSE）
 
 关闭游标，释放活动集及其所占的资源，使它不再和查询结果相联系。需要在执行游标时，在执行open语句。
 ```sql
@@ -443,7 +620,13 @@ cursor_variable_name}
 End_Exec
 ```
 
-#### 销毁游标
+```sql
+EXEC SQL CLOSE cur_student;
+```
+
+
+
+#### 销毁游标（FREE/DESTROY/DEALLOCATE）
 ```sql
 Free cursor_name 或者Destroy cursor_name 或
 者 Deallocatecursor_name
@@ -453,15 +636,66 @@ Free cursor_name 或者Destroy cursor_name 或
 + -1 FETCH 没取到数据，游标中的数据已经取完
 + -2 被提取的行不存在，进程被杀、意外中断
 
+判断是否结束
+```sql
+WHILE (SQLCODE == 0)
+{
+    // 处理当前行
+    EXEC SQL FETCH cur_student INTO :sno, :score;
+}
+```
+SQLCODE是用于判断是否成功，以及是否到结果集末尾。
+
+
+
 
 ### 使用游标的例子
 
-非滚动游标
 
-滚动游标
+非滚动游标只能按顺序向前读取；滚动游标可以在结果集中前后移动、随机读取。
+
+#### 非滚动游标（Non-scrollable Cursor）
+只能“从头到尾，一行一行往前读”的游标，只能用一种方式取出数据：FETCH NEXT
+
+```sql
+DECLARE cur_non_scrollable CURSOR FOR
+    SELECT sno, score
+    FROM SC;    
+OPEN cur_non_scrollable;
+FETCH NEXT FROM cur_non_scrollable INTO :sno, :score;
+```
 
 
-### 不需要使用游标的数据操作
+
+#### 滚动游标（Scrollable Cursor）
+滚动游标是可以在结果集中前后移动、定位到任意行的游标。
+
+滚动游标支持多种 FETCH 方式：
+```
+FETCH NEXT      -- 下一行
+FETCH PRIOR     -- 上一行
+FETCH FIRST     -- 第一行
+FETCH LAST      -- 最后一行
+FETCH ABSOLUTE n  -- 第 n 行
+FETCH RELATIVE n  -- 相对当前行
+```
+
+
+例子
+```sql
+DECLARE cur2 CURSOR SCROLL
+FOR
+SELECT sno, score FROM SC;
+
+OPEN cur2;
+
+FETCH FIRST FROM cur2 INTO @sno, @score;
+FETCH NEXT  FROM cur2 INTO @sno, @score;
+FETCH PRIOR FROM cur2 INTO @sno, @score;
+```
+
+
+### 不需要使用游标的数据操作（insert、delete、update、select）
 
 1. 如果是insert、delete、update，加上前缀Exec SQL和End_Exec可以嵌入在宿主语言中使用；
 2. 对于select语句，如果查询结果为单元组的可以直接嵌入在宿主语言中使用。
@@ -482,7 +716,7 @@ Set grade = grade+:raise
 Where C# in(select C# from c where cname =
 ‘Mathes’);
 ```
-+ 结果是一个元组的select语句
++ 结果是一个元组的select语句，SELECT 语句如果保证最多只返回一行，可以不用游标。
 ```sql
 Exec SQL select sname,age
 into :stu_name,:stu_age
@@ -491,7 +725,7 @@ From s where sno = ‘s10’;
 
 ## 存储过程(Store Procedure)
 
-
+存储过程（Stored Procedure）是预先编译并存储在数据库中的一组 SQL 语句，用于完成特定功能，可通过名称反复调用。
 
 + 存储过程是为了完成特定的功能而汇集成一组的SQL语句集，它是 SQL 语句和可选控制流语句的预编译集合，以一个名称存储并作为一个单元处理
 + 被命名，经编译后存储在DBMS中
@@ -510,7 +744,7 @@ From s where sno = ‘s10’;
   + 可以分为：系统存储过程(SP_)、用户定义的存储过程
 
 
-### 创建存储过程
+### 创建存储过程（CREATE PROCEDURE）
 ```sql
 CREATE PROC [ EDURE ] procedure_name[ ; number ]
 [ { @parameter data_type}
@@ -524,15 +758,40 @@ AS sql_statement[ ...n ]
 参数说明
 + procedure_name ：新存储过程的名称。
 + ;number ： 是可选的整数，用来对同名的存储过程分组，使用一个 DROP PROCEDURE 语句可将这些分组过程一起删除。
-+ @parameter ：过程中的参数。data_type ：参数的数据
-类型。
++ @parameter ：过程中的参数。data_type ：参数的数据类型。
 + RECOMPILE:强制在每次执行此过程时都对该过程进行编译。
 + AS：指定过程要执行的操作。
 + sql_statement ：过程中要包含的任意数目和类型的Transact-SQL 语句。但有一些限制。
 
 
-
 例子：
+
+```sql
+CREATE PROCEDURE dbo.GetStudent
+    @sno CHAR(10)
+AS
+BEGIN
+    SELECT *
+    FROM Student
+    WHERE sno = @sno;
+END;
+```
+带输出参数的存储过程
+```sql
+CREATE PROCEDURE dbo.CountStudent
+    @count INT OUTPUT
+AS
+BEGIN
+    SELECT @count = COUNT(*)
+    FROM Student;
+END;
+```
+```sql
+DECLARE @num INT;
+EXEC dbo.CountStudent @num OUTPUT;
+PRINT @num;
+```
+
 
 阅读系统存储过程的代码
 1. sp_helpdb
@@ -558,14 +817,16 @@ Exec <procedure_name> < 参数 >
 ```
 
 ### 查看存储过程
+
 ### 修改存储过程
+
 ### 删除存储过程
 
 
 
-## 触发器概述
+## 触发器概述(Triggers)
 
-在上面，我们介绍了一般意义的存储过程，即用户自定义的存储过程和系统存储过程。接下来将介绍一种特殊的存储过程，即**触发器(trigger)**。
+在上面，我们介绍了一般意义的存储过程，即用户自定义的存储过程和系统存储过程。接下来将介绍**一种特殊的存储过程**，即**触发器(trigger)**。
 
 触发器主要是通过事件进行触发而被执行的，而存储过程可以通过存储过程名字而被直接调用。
 

@@ -1,6 +1,15 @@
 # SQL查询管理
 
-![alt text](image-107.png)
+
+
+| SQL功能   | 动词                     |
+| --------- | ------------------------ |
+| 数据定义 | CREATE, DROP, ALTER |
+| 数据查询 | SELECT                 |
+| 数据操纵 | INSERT, UPDATE, DELETE |
+| 数据控制 | GRANT, REVOKE         |
+
+
 
 ## SQL语言的数据查询
 
@@ -20,8 +29,7 @@ FROM〈表名或视图名〉[{，〈表名或视图名〉}]
 
 SELECT语句的格式：
 ```sql
-SELECT [ALL|DISTINCT][TOP N [PERCENT][WITH
-TIES]]
+SELECT [ALL|DISTINCT][TOP N [PERCENT][WITHTIES]]
 列名1 [AS 别名1]
 [, 列名2 [ AS 别名2]…]
 [INTO 新表名]
@@ -36,44 +44,41 @@ ON 条件
   + 如果有GROUP子句，则将查询结果按照<列名1>相同的值进行分组。
   + 如果GROUP子句后有HAVING短语，则只输出满足HAVING条件的元组。
   + 如果有ORDER子句，查询结果还要按照<列名2>的值进行排序。
-
-
-例 查询全体学生的学号、姓名和年龄。
++ ALL / DISTINCT（去重），ALL 是默认的不去重，通常不写，DISTINCT 去重。去掉重复行，是对整行结果去重，如果写两个，是对 (department, salary) 组合去重。
 ```sql
-SELECT SNO, SN, AGE FROM S
+SELECT DISTINCT department, salary
 ```
-例 查询学生的全部信息。
++ TOP N（SQL Server 特有）
 ```sql
-SELECT * FROM S
+SELECT TOP 5 * FROM Employee;
 ```
-+ 用‘ * ’表示S表的全部列名，而不必逐一列出。
-
-例 查询选修了课程的学生号。
++ TOP N PERCENT,返回前 百分之几的记录
 ```sql
-SELECT DISTINCT SNO FROM SC
+SELECT TOP 10 PERCENT * FROM Employee;
+``` 
++ WITH TIES,当有多行数据的排序值相同，超过了TOP N的限制时，WITH TIES 会把这些相同排序值的行也返回。WITH TIES 必须配合 ORDER BY。
+```sql
+SELECT TOP 5 WITH TIES * FROM Employee ORDER BY Salary DESC;
 ```
-+ 查询结果中的重复行被去掉
-
-
-上述查询均为不使用WHERE子句的无条件查询，也称作投影查询。另外，利用投影查询可控制列名的顺序，并可通过指定别名改变查询结果的列标题的名字。
-
-例 查询全体学生的姓名、学号和年龄。
++ 列名 + AS 别名，改显示名，不改表结构,比如将Employee表中的salary列重命名为sal。
+```sql
+SELECT salary AS sal
+FROM Employee;
+```
+例 查询全体学生的姓名、学号和年龄。其中，NAME为SNAME的别名。
 ```sql
 SELECT SNAME NAME, SNO, AGE FROM S
 ```
-+ 其中，NAME为SNAME的别名
 
 例 查询全体学生的出生年份。
 ```sql
 SELECT SNO,SNAME,BIRTH=YEAR(getdate())-
 AGE FROM S
 ```
-```sql
-top n|top n percent
-select top 10 percent * from s
-order by age desc
-```
 
+
+
+上述查询均为**不使用WHERE子句的无条件查询**，也称作**投影查询**。另外，利用投影查询可控制列名的顺序，并可通过指定别名改变查询结果的列标题的名字。
 
 
 ### 2 条件查询
@@ -98,9 +103,9 @@ SCORE>85
 ```
 
 
-#### 多重条件查询
+#### 多重条件查询(NOT, AND, OR)
 + 当WHERE子句需要指定一个以上的查询条件时，则需要使用逻辑运算符AND、OR和NOT将其连结成复合的逻辑表达式。
-+ 其优先级由高到低为：NOT、AND、OR，用户可以使用括号改变优先级。
++ 其优先级由高到低为：**NOT、AND、OR**，用户可以使用括号改变优先级。
 
 例查询选修C1或C2且分数大于等于85分学生的的学号、课程号和成绩。
 ```sql
@@ -110,7 +115,7 @@ WHERE（CNO=’C1’ OR CNO=’C2’） AND
 SCORE>=85
 ```
 
-#### 确定范围
+#### 确定范围(BETWEEN…AND…)
 例查询工资在1000至1500之间的教师的教师号、姓名及职称。
 ```sql
 SELECT TNO,TN,PROF
@@ -131,7 +136,7 @@ FROM T
 WHERE SAL NOT BETWEEN 1000 AND 1500
 ```
 
-#### 确定集合
+#### 确定集合(IN…/NOT IN…)
 + 利用“IN”操作可以查询属性值属于指定集合的元组。
 
 例 查询选修C1或C2的学生的学号、课程号和成绩。
@@ -163,7 +168,7 @@ WHERE CNO<>‘C1’ AND CNO<> ‘C2’
 ```
 
 
-#### 部分匹配查询
+#### 部分匹配查询/模糊查询（LIKE/NOT LIKE）
 上例均属于完全匹配查询，当不知道完全精确的值时，用户还可以使用LIKE或NOT LIKE进行部分匹配查询（也称模糊查询）。
 
 LIKE定义的一般格式为：
@@ -173,35 +178,55 @@ LIKE定义的一般格式为：
 + 属性名必须为字符型，字符串常量的字符可以包含如下两个特殊符号：
   + %：表示任意长度的字符串；
   + _：表示任意单个字符；
-  + [charlist]和[^charlist] ：字符列中的任何单一字符。
+  + [charlist]和[^charlist] ：匹配集合中任意一个字符或不在集合中的任意一个字符。
 
-
-例 查询所有姓张的教师的教师号和姓名。
+例 查询姓名中包含“张”字的学生的学号和姓名。
 ```sql
-SELECT TNO, TN
-FROM T
-WHERE TN LIKE‘张%’
-``` 
+-- 以 “张” 开头
+WHERE name LIKE '张%'
 
-例 查询姓名中第二个汉字是“力”的教师号和姓名。
-```sql
-SELECT TNO, TN
-FROM T
-WHERE TN LIKE ‘_力%’
+-- 以 “明” 结尾
+WHERE name LIKE '%明'
+
+-- 包含 “计”
+WHERE name LIKE '%计%'
 ```
 
-例 查询学生中姓张，中间含有国或辽的同学的信息
+例 查询学号为2023开头，且第5位为0的学生的学号。
 ```sql
-select *
-from S
-where sname like '张[国辽]_'
-select *
-from S
-where sname like '张[^国辽]_'
+-- 学号 2023X001
+WHERE sno LIKE '2023_001'
+
+-- 学号 20230XX
+WHERE sno LIKE '20230__'
 ```
 
 
-#### 空值查询
+例 查询姓名第二个字是“明”或“华”的学生的学号和姓名。
+```sql
+-- 姓名第二个字是 “明” 或 “华”
+WHERE name LIKE '_[明华]'
+
+-- 姓名第二个字不是 “明” 或 “华”
+WHERE name LIKE '_[^明华]'
+```
+
+**NOT LIKE 用于排除符合某种模式的记录**
+
+```sql
+-- 不以 “张” 开头
+WHERE name NOT LIKE '张%'
+```
+
+注意点：
++ LIKE 只能用于字符串
++ % 会影响索引使用（了解）
++ 在 SQL Server 中，LIKE 是否区分大小写，取决于“排序规则（Collation）”，不是 LIKE 本身。SQL Server 常见默认排序规则是：Chinese_PRC_CI_AS，CI = Case Insensitive（不区分大小写），AS = Accent Sensitive（区分重音）
++ LIKE 对 NULL 不成立，NULL 表示“未知”，而不是一个值。任何 列 LIKE '模式'，当列值为 NULL 时，结果都是 UNKNOWN，不会被选中。
+
+
+
+#### 空值查询（IS NULL / IS NOT NULL）
 
 某个字段没有值称之为具有空值（NULL）。
 + 通常没有为一个列输入值时，该列的值就是空值。
@@ -218,7 +243,7 @@ WHERE SCORE IS NULL
 
 
 
-### 3 常用库函数及统计汇总查询
+### 3 常用库函数（AVG, SUM, MAX, MIN, COUNT）
 SQL提供了许多库函数，增强了基本检索能力。
 
 ![alt text](image-110.png)
@@ -267,8 +292,7 @@ SELECT COUNT (SCORE)
 FROM SC
 ```
 
-+ 上例中成绩为零的同学计算在内，没有成绩（即为空值）的不计
-算。
++ 上例中成绩为零的同学计算在内，没有成绩（即为空值）的不计算。
 
 
 
@@ -282,7 +306,7 @@ WHERE DEPT=‘计算机’
 + 不消除重复行，不允许使用DISTINCT关键字。
 
 
-### 4 分组查询
+### 4 分组查询（GROUP BY / HAVING）
 
 GROUP BY子句可以将查询结果按属性列或属性列组合在行的方向上进行分组，每组在属性列或属性列组合上具有相同的值。
 
@@ -314,11 +338,15 @@ WHERE与HAVING子句的根本区别在于作用对象不同。
 + HAVING子句作用于组，选择满足条件的组，必须用于GROUP BY子句之后，但GROUP BY子句可没有HAVING子句。
 
 
-### 5 查询的排序
+### 5 查询的排序（ORDER BY）
 + 当需要对查询结果排序时，应该使用ORDER BY子句
 + ORDER BY子句必须出现在其他子句之后
 + 排序方式可以指定，DESC为降序，ASC为升序，**缺省时为升序**
 
+
+**升序和降序**：都是从上往下看
++ 升序（ASC）：从小到大，从上往下
++ 降序（DESC）：从大到小，从上往下
 
 例 查询选修C1 的学生学号和成绩，并按成绩降序排列。
 ```sql
@@ -363,9 +391,9 @@ ORDER BY SUM(SCORE) DESC
 + 2 代表查询结果的第二列。
 
 
-### 6 INTO子句
+### 6 INTO子句（创建新表）
 
-SELECT…INTO 在默认字段组中创建一个新表并将来自查询的结果行插入新表中
+SELECT…INTO 在默认字段组中创建一个新表并将来自查询的结果行插入新表中， 把查询结果直接存成一张新表，**新表必须不存在**，是一次性复制结构 + 数据。
 
 ```sql
 SELECT *
@@ -376,7 +404,7 @@ WHERE Sex = ‘男’
 
 
 
-### 7 COMPUTE子句
+### 7 COMPUTE子句（已过时）
 生成合计作为附加的汇总列出现在结果集的最后。
 ```sql
 SELECT s.s#,sname,age,sex,c#,grade
@@ -412,10 +440,10 @@ GROUP BY Country,[State],City
 WITH ROLLUP
 ```
 
-### 9 数据表连接及连接查询
-+ 数据表之间的联系是通过表的字段值来体现的，这种字段称为连接字段。
+### 9 数据表连接及连接查询（JOIN）
++ 数据表之间的联系是通过表的字段值来体现的，这种字段称为**连接字段**。
 + 连接操作的目的就是通过加在连接字段的条件将多个表连接起来，以便从多个表中查询数据。
-+ 前面的查询都是针对一个表进行的，当查询同时涉及两个以上的表时，称为连接查询。
++ 前面的查询都是针对一个表进行的，当查询同时涉及两个以上的表时，称为**连接查询**。
 + 表的连接方法有两种：
   + 方法1：表之间满足一定的条件的行进行连接，此时FROM子句中指明进行连接的表名，WHERE子句指明连接的列名及其连接条件。
   + 方法2：利用关键字JOIN进行连接。
@@ -424,16 +452,10 @@ WITH ROLLUP
 
 具体分为以下几种：
 + INNER JOIN ：显示符合条件的记录，此为默认值；
-+ LEFT （OUTER） JOIN：显示符合条件的数据行以及左边表中
-不符合条件的数据行，此时右边数据行会以NULL来显示，此称
-为左连接；
-+ RIGHT （OUTER） JOIN：显示符合条件的数据行以及右边表
-中不符合条件的数据行，此时左边数据行会以NULL来显示，此
-称为右连接；
-+ FULL （OUTER） JOIN：显示符合条件的数据行以及左边表和
-右边表中不符合条件的数据行，此时缺乏数据的数据行会以NULL来显示；
-+ CROSS JOIN：会将一个表的每一笔数据和另一表的每笔数据匹
-配成新的数据行。
++ LEFT （OUTER） JOIN：显示符合条件的数据行以及左边表中不符合条件的数据行，此时右边数据行会以NULL来显示，此称为左连接；
++ RIGHT （OUTER） JOIN：显示符合条件的数据行以及右边表中不符合条件的数据行，此时左边数据行会以NULL来显示，此称为右连接；
++ FULL （OUTER） JOIN：显示符合条件的数据行以及左边表和右边表中不符合条件的数据行，此时缺乏数据的数据行会以NULL来显示；
++ CROSS JOIN：会将一个表的每一笔数据和另一表的每笔数据匹配成新的数据行。
 
 当将JOIN 关键词放于FROM子句中时，应有关键词ON与之相对应，以表明连接的条件。
 
@@ -445,7 +467,7 @@ WITH ROLLUP
 
 方法1：
 ```sql
-SELECT T.TNO ,TN,CNO
+SELECT T.TNO ,TN ,CNO
 FROM T,TC
 WHERE (T.TNO = TC. TNO) AND (TN = ‘刘伟’)
 ```
@@ -479,7 +501,6 @@ SELECT R2.TNO,R2.TN, R1.CNO
         WHERE TN='刘伟') AS R2
         ON R1.TNO=R2.TNO
 ```
-
 
 例 查询所有选课学生的学号、姓名、选课名称及成绩。
 ```sql
@@ -551,10 +572,8 @@ SELECT R3.SNO,R3.SN,R3.AGE,R4.CN
 
 
 #### 外连接
-+ 在上面的连接操作中，不满足连接条件的元组不能作为查询结果
-输出。
-+ 如例*的查询结果只包括有选课记录的学生，而不会有吴丽同学
-的信息。若将例*改成：
++ 在上面的连接操作中，不满足连接条件的元组不能作为查询结果输出。
++ 如例*的查询结果只包括有选课记录的学生，而不会有吴丽同学的信息。若将例*改成：
 
 例* 查询所有学生的学号、姓名、选课名称及成绩。（没有选课的
 同学的选课信息显示为空）则应写成如下的SQL语句。
@@ -788,7 +807,7 @@ WHERE NOT EXISTS
 选出这样一些学生名单，在SC表中不存在他们没有选修课程的记录。
 
 
-### 11 集合查询
+### 11 集合查询（UNION, INTERSECT, EXCEPT）
 
 集合操作的种类
 + 并操作UNION
@@ -799,8 +818,7 @@ WHERE NOT EXISTS
 + 参加集合操作的各查询结果的列数必须相同；
 + 对应项的数据类型也必须兼容；
 + 返回的结果集的列名与操作数左侧的查询返回的列名相同；
-+ 比较的两个查询结果集中不能包含不可比较的数据类型（xml、
-text、ntext、image 或非二进制 CLR 用户定义类型）的列；
++ 比较的两个查询结果集中不能包含不可比较的数据类型（xml、text、ntext、image 或非二进制 CLR 用户定义类型）的列；
 + 通过比较行来确定非重复值时，两个 NULL 值被视为相等。
 
 
@@ -867,7 +885,7 @@ WHERE S#='300203080218'
 
 SQL语言的数据更新语句DML主要包括插入数据、修改数据和删除数据三种语句。
 
-### 插入数据记录
+### 插入数据记录（INSERT INTO）
 
 插入数据是把新的记录插入到一个存在的表中。插入数据使用语句INSERT INTO，可分为以下几种情况。
 
@@ -929,8 +947,7 @@ INSERT INTO AVGSAL
 GROUP BY DEPT
 ```
 
-### 修改数据记录
-
+### 修改数据记录（UPDATE...SET）
 SQL语言可以使用UPDATE语句对表中的一行或多行记录的某些列值进行修改，其语法格式为：
 ```sql
 UPDATE <表名>
