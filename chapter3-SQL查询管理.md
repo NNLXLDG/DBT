@@ -12,7 +12,6 @@
 | 数据控制 | GRANT, REVOKE         |
 
 
-
 ## SQL语言的数据查询(DQL)
 
 
@@ -1151,5 +1150,195 @@ WHERE EXISTS (
     WHERE S.SNO = SC.SNO
       AND S.DEPT = '计算机系'
 );
+```
+
+
+
+## 一道综合题
+
+![alt text](image-120.png)
+
+1 查询成绩不及格的学生姓名、课程名称和成绩
+
+```sql
+SELECT s.Sname, c.Cname, r.Grade
+FROM Reports r
+JOIN Students s ON r.Sno = s.Sno
+JOIN Courses  c ON r.Cno = c.Cno
+WHERE r.Grade < 60;
+```
+
+2 查询每门课程的最高分、最低分、学号和姓名
+
+```sql
+SELECT c.Cno, c.Cname,
+       t1.MaxGrade, s1.Sno AS MaxSno, s1.Sname AS MaxName,
+       t2.MinGrade, s2.Sno AS MinSno, s2.Sname AS MinName
+FROM Courses c
+LEFT JOIN (
+    SELECT Cno, MAX(Grade) AS MaxGrade
+    FROM Reports
+    GROUP BY Cno
+) t1 ON c.Cno = t1.Cno
+LEFT JOIN Reports r1 ON r1.Cno = c.Cno AND r1.Grade = t1.MaxGrade
+LEFT JOIN Students s1 ON s1.Sno = r1.Sno
+LEFT JOIN (
+    SELECT Cno, MIN(Grade) AS MinGrade
+    FROM Reports
+    GROUP BY Cno
+) t2 ON c.Cno = t2.Cno
+LEFT JOIN Reports r2 ON r2.Cno = c.Cno AND r2.Grade = t2.MinGrade
+LEFT JOIN Students s2 ON s2.Sno = r2.Sno;
+```
+
+
+3 查询选修了所有课程的学号和姓名
+
+```sql
+SELECT s.Sno, s.Sname
+FROM Students s
+JOIN Reports r ON s.Sno = r.Sno
+GROUP BY s.Sno, s.Sname
+HAVING COUNT(DISTINCT r.Cno) = (SELECT COUNT(*) FROM Courses);
+
+```
+
+4 将计算机系每个同学的“数据库技术”成绩加 2 分
+
+```sql
+UPDATE r
+SET r.Grade = r.Grade + 2
+FROM Reports r
+JOIN Students s ON r.Sno = s.Sno
+WHERE s.Dno = (SELECT Dno FROM Depts WHERE Dname = '计算机系')
+  AND r.Cno = (SELECT Cno FROM Courses WHERE Cname = '数据库技术');
+```
+
+
+5 在 Courses 表的 Cno 属性上创建唯一性索引，降序排序
+```sql
+CREATE UNIQUE INDEX IX_Courses_Cno_DESC
+ON Courses (Cno DESC);
+```
+
+
+6 查询每门课程的平均成绩
+```sql
+SELECT c.Cname, AVG(r.Grade) AS AvgGrade
+FROM Reports r
+JOIN Courses c ON r.Cno = c.Cno
+GROUP BY c.Cname;
+```
+
+
+7 查询平均成绩大于 80 分的课程名称
+```sql
+SELECT c.Cname
+FROM Reports r
+JOIN Courses c ON r.Cno = c.Cno
+GROUP BY c.Cname
+HAVING AVG(r.Grade) > 80;
+```
+
+8 查询至少有 10 名学生选修的课程
+```sql
+SELECT c.Cname
+FROM Reports r
+JOIN Courses c ON r.Cno = c.Cno
+GROUP BY c.Cname
+HAVING COUNT(DISTINCT r.Sno) >= 10;
+```
+
+9 查询没有选修任何课程的学生
+```sql
+SELECT s.Sno, s.Sname
+FROM Students s
+LEFT JOIN Reports r ON s.Sno = r.Sno
+WHERE r.Sno IS NULL;
+```
+
+10 查询至少选修了 3 门课程的学生
+```sql
+SELECT s.Sno, s.Sname
+FROM Students s
+JOIN Reports r ON s.Sno = r.Sno
+GROUP BY s.Sno, s.Sname
+HAVING COUNT(DISTINCT r.Cno) >= 3;
+```
+
+11 查询选修课程数最多的学生
+```sql
+SELECT TOP 1 s.Sno, s.Sname, COUNT(r.Cno) AS CourseCnt
+FROM Students s
+JOIN Reports r ON s.Sno = r.Sno
+GROUP BY s.Sno, s.Sname
+ORDER BY COUNT(r.Cno) DESC;
+```
+
+12 查询每位教师教授的课程数
+```sql
+SELECT t.Tname, COUNT(DISTINCT r.Cno) AS CourseCount
+FROM Teachers t
+LEFT JOIN Reports r ON t.Tno = r.Tno
+GROUP BY t.Tname;
+```
+
+13 查询没有教授任何课程的教师
+```sql
+SELECT t.Tno, t.Tname
+FROM Teachers t
+LEFT JOIN Reports r ON t.Tno = r.Tno
+WHERE r.Tno IS NULL;
+```
+
+14 查询“计算机系”学生的姓名、课程名和成绩
+```sql
+SELECT s.Sname, c.Cname, r.Grade
+FROM Students s
+JOIN Depts d ON s.Dno = d.Dno
+JOIN Reports r ON s.Sno = r.Sno
+JOIN Courses c ON r.Cno = c.Cno
+WHERE d.Dname = '计算机系';
+```
+
+
+15 查询每个系学生的平均成绩
+```sql
+SELECT d.Dname, AVG(r.Grade) AS AvgGrade
+FROM Students s
+JOIN Depts d ON s.Dno = d.Dno
+JOIN Reports r ON s.Sno = r.Sno
+GROUP BY d.Dname;
+```
+
+16 删除没有选修任何课程的学生
+```sql
+DELETE FROM Students
+WHERE Sno NOT IN (SELECT DISTINCT Sno FROM Reports);
+```
+
+17 将不及格成绩统一改为 60
+```sql
+UPDATE Reports
+SET Grade = 60
+WHERE Grade < 60;
+```
+
+18 在 Reports 表上建立复合主键
+```sql
+ALTER TABLE Reports
+ADD CONSTRAINT PK_Reports PRIMARY KEY (Sno, Cno);
+```
+为什么 Reports 表要以 (Sno, Cno) 作为主键？
+
++ 防止同一学生重复选同一课程
++ 体现学生与课程的多对多关系
+
+
+
+19 在 Reports.Grade 上建立普通索引
+```sql
+CREATE INDEX IX_Reports_Grade
+ON Reports (Grade);
 ```
 
