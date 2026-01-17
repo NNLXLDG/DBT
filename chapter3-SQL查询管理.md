@@ -1,3 +1,5 @@
+[TOC]
+
 # SQL查询管理
 
 
@@ -11,7 +13,7 @@
 
 
 
-## SQL语言的数据查询
+## SQL语言的数据查询(DQL)
 
 
 ### 1 SELECT命令的格式与基本使用
@@ -243,7 +245,7 @@ WHERE SCORE IS NULL
 
 
 
-### 3 常用库函数（AVG, SUM, MAX, MIN, COUNT）
+### 3 聚合函数（AVG, SUM, MAX, MIN, COUNT）
 SQL提供了许多库函数，增强了基本检索能力。
 
 ![alt text](image-110.png)
@@ -440,7 +442,8 @@ GROUP BY Country,[State],City
 WITH ROLLUP
 ```
 
-### 9 数据表连接及连接查询（JOIN）
+
+### 9 *数据表连接及连接查询（JOIN）
 + 数据表之间的联系是通过表的字段值来体现的，这种字段称为**连接字段**。
 + 连接操作的目的就是通过加在连接字段的条件将多个表连接起来，以便从多个表中查询数据。
 + 前面的查询都是针对一个表进行的，当查询同时涉及两个以上的表时，称为**连接查询**。
@@ -571,11 +574,11 @@ SELECT R3.SNO,R3.SN,R3.AGE,R4.CN
 ```
 
 
-#### 外连接
+#### *外连接
 + 在上面的连接操作中，不满足连接条件的元组不能作为查询结果输出。
-+ 如例*的查询结果只包括有选课记录的学生，而不会有吴丽同学的信息。若将例*改成：
++ 如例的查询结果只包括有选课记录的学生，而不会有吴丽同学的信息。若将例*改成：
 
-例* 查询所有学生的学号、姓名、选课名称及成绩。（没有选课的
+例 查询所有学生的学号、姓名、选课名称及成绩。（没有选课的
 同学的选课信息显示为空）则应写成如下的SQL语句。
 ```sql
 SELECT S.SNO,SN,CN,SCORE
@@ -587,6 +590,7 @@ SELECT S.SNO,SN,CN,SCORE
 ```
 
 则查询结果只包括所有的学生，没有选课的吴丽同学的选课信息显示为空。
+
 
 
 ### 10 子查询
@@ -806,6 +810,45 @@ WHERE NOT EXISTS
 ```
 选出这样一些学生名单，在SC表中不存在他们没有选修课程的记录。
 
+#### 相关子查询 vs 不相关子查询
+
+子查询可以独立执行，其结果与外层查询无关。 这种子查询称为**不相关子查询**。
+
+```sql
+SELECT *
+FROM student
+WHERE age > (
+    SELECT AVG(age)
+    FROM student
+);
+```
+子查询
+```sql      
+SELECT AVG(age) FROM student
+```
+
+
+子查询的执行依赖外层查询，每执行一行外层查询，子查询就执行一次。是**相关子查询**。
+
+```sql
+SELECT *
+FROM student s
+WHERE age > (
+    SELECT AVG(age)
+    FROM student
+    WHERE class_id = s.class_id
+);
+```
+子查询
+```sql      
+SELECT AVG(age)
+FROM student
+WHERE class_id = s.class_id
+```
+依赖上层，因此无法执行。
+
+
+
 
 ### 11 集合查询（UNION, INTERSECT, EXCEPT）
 
@@ -881,7 +924,24 @@ WHERE S#='300203080218'
 ```
 
 
-## SQL数据更新
+### 12 基于派生表查询
+子查询不仅可以在where子句中，还可以在from子句中，这时子查询生成的临时派生表成为主查询的查询对象。
+
+派生表就是“把一个子查询当成一张临时表来用”。先分组统计，再筛选结果。
+
+例 查询选修两门及以上课程的学生学号。
+```sql
+SELECT *
+FROM (
+    SELECT sno, COUNT(*) AS cnt
+    FROM SC
+    GROUP BY sno
+) AS t
+WHERE cnt >= 2;
+```
+
+
+## SQL 数据更新(DML)
 
 SQL语言的数据更新语句DML主要包括插入数据、修改数据和删除数据三种语句。
 
@@ -948,12 +1008,15 @@ GROUP BY DEPT
 ```
 
 ### 修改数据记录（UPDATE...SET）
+
 SQL语言可以使用UPDATE语句对表中的一行或多行记录的某些列值进行修改，其语法格式为：
+
 ```sql
 UPDATE <表名>
 SET <列名>=<表达式> [,<列名>=<表达式>]…
 [WHERE <条件>]
 ```
+
 其中：
 + <表名>是指要修改的表
 + SET子句给出要修改的列及其修改后的值
@@ -1015,7 +1078,7 @@ UPDATE T
 
 
 
-### 删除数据记录
+### 删除数据记录（DELETE）
 
 使用DELETE语句可以删除表中的一行或多行记录，其语法格式为：
 ```sql
@@ -1046,6 +1109,15 @@ FROM TC
 执行此语句后，TC表即为一个空表，但其定义仍存在数据字典中。
 
 
+```sql
+DELETE
+FROM S
+WHERE SNO NOT IN (
+    SELECT SNO
+    FROM SC
+);
+```
+
 #### 利用子查询选择要删除的行
 
 
@@ -1059,12 +1131,25 @@ WHERE TNO=
     WHERE TN=’ 刘伟’)
 ```
 
+例 删除计算机系学生的选课记录。
+```sql
+DELETE
+FROM SC
+WHERE SNO IN (
+    SELECT SNO
+    FROM S
+    WHERE DEPT = '计算机系'
+);
+```
 
-
-
-
-
-
-
-
+```sql
+DELETE
+FROM SC
+WHERE EXISTS (
+    SELECT *
+    FROM S
+    WHERE S.SNO = SC.SNO
+      AND S.DEPT = '计算机系'
+);
+```
 

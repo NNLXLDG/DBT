@@ -1,3 +1,5 @@
+[TOC]
+
 # Transact-SQL程序设计
 
 什么是Transact-SQL?
@@ -723,7 +725,7 @@ into :stu_name,:stu_age
 From s where sno = ‘s10’;
 ```
 
-## 存储过程(Store Procedure)
+## 存储过程(Store Procedure)（DDL）
 
 存储过程（Stored Procedure）是预先编译并存储在数据库中的一组 SQL 语句，用于完成特定功能，可通过名称反复调用。
 
@@ -818,9 +820,56 @@ Exec <procedure_name> < 参数 >
 
 ### 查看存储过程
 
-### 修改存储过程
+查看当前数据库所有存储过程
+```sql
+EXEC sp_help;
+```
+或更精确：
+```sql
+EXEC sp_stored_procedures;
+```
 
-### 删除存储过程
+
+### 修改存储过程(ALTER PROCEDURE)
+
+修改存储过程要用 ALTER PROCEDURE，不是 UPDATE。
+```sql
+ALTER PROCEDURE 存储过程名
+    @参数 类型,
+    @参数 类型
+AS
+BEGIN
+    SQL 语句
+END;
+```
+原来：
+```sql
+CREATE PROCEDURE proc_get_student
+AS
+SELECT * FROM student;
+```
+修改为：
+```sql
+ALTER PROCEDURE proc_get_student
+    @age INT
+AS
+BEGIN
+    SELECT *
+    FROM student
+    WHERE age >= @age;
+END;
+```
+
+**ALTER 会保留存储过程名,不需要先 DROP**
+
+而  修改约束 ≠ ALTER 约束
+
+
+### 删除存储过程(DROP PROCEDURE)
+
+```sql
+DROP PROCEDURE 存储过程名;
+```
 
 
 
@@ -877,7 +926,7 @@ Exec <procedure_name> < 参数 >
 
 
 
-### 如何创建触发器
+### 创建触发器(CREATE TRIGGER)
 1. **展开服务器组**：展开服务器组，然后展开目标服务器。
 2. **定位数据库和表**：
    - 展开"数据库"文件夹
@@ -959,7 +1008,141 @@ EXEC master..xp_sendmail
 GO
 ```
 
-### 如何修改触发器
+##### 校验型触发器
+
+禁止插入负成绩
+```sql
+CREATE TRIGGER trg_check_grade
+ON SC
+FOR INSERT, UPDATE
+AS
+BEGIN
+    IF EXISTS (
+        SELECT *
+        FROM inserted
+        WHERE grade < 0 OR grade > 100
+    )
+    BEGIN
+        RAISERROR('成绩必须在 0~100 之间', 16, 1);
+        ROLLBACK TRANSACTION;
+    END
+END;
+```
+
+##### 审计日志触发器
+
+记录学生表的增删改操作
+```sql
+CREATE TABLE student_log(
+    log_id INT IDENTITY PRIMARY KEY,
+    action_type VARCHAR(10),
+    sno CHAR(14),
+    action_time DATETIME DEFAULT GETDATE()
+);
+```
+```sql
+CREATE TRIGGER trg_student_log
+ON student
+FOR INSERT, UPDATE, DELETE
+AS
+BEGIN
+    INSERT INTO student_log(action_type, sno)
+    SELECT 'INSERT', sno FROM inserted
+    UNION ALL
+    SELECT 'DELETE', sno FROM deleted;
+END;
+```
+
+##### 级联维护触发器
+
+删除学生时，自动删除选课记录
+```sql
+CREATE TRIGGER trg_delete_student
+ON student
+FOR DELETE
+AS
+BEGIN
+    DELETE SC
+    FROM SC
+    JOIN deleted d ON SC.sno = d.sno;
+END;
+```
+
+
+##### 限制业务规则触发器
+
+禁止删除课程
+
+```sql
+CREATE TRIGGER trg_no_delete_course
+ON course
+FOR DELETE
+AS
+BEGIN
+    IF EXISTS (
+        SELECT *
+        FROM SC
+        JOIN deleted d ON SC.cno = d.cno
+    )
+    BEGIN
+        RAISERROR('该课程已有学生选修，不能删除', 16, 1);
+        ROLLBACK TRANSACTION;
+    END
+END;
+```
+
+
+##### 统计维护触发器
+
+自动维护课程选课人数
+```sql
+CREATE TABLE course(
+    cno CHAR(4) PRIMARY KEY,
+    cname VARCHAR(20),
+    student_count INT DEFAULT 0
+);
+```
+```sql
+CREATE TRIGGER trg_update_count
+ON SC
+FOR INSERT, DELETE
+AS
+BEGIN
+    UPDATE course
+    SET student_count = student_count + (
+        SELECT COUNT(*) FROM inserted
+    )
+    WHERE cno IN (SELECT cno FROM inserted);
+
+    UPDATE course
+    SET student_count = student_count - (
+        SELECT COUNT(*) FROM deleted
+    )
+    WHERE cno IN (SELECT cno FROM deleted);
+END;
+```
+
+
+##### 限制操作时间触发器
+
+只允许工作时间修改成绩
+```sql
+CREATE TRIGGER trg_time_limit
+ON SC
+FOR UPDATE
+AS
+BEGIN
+    IF DATEPART(HOUR, GETDATE()) NOT BETWEEN 8 AND 18
+    BEGIN
+        RAISERROR('只能在工作时间修改成绩', 16, 1);
+        ROLLBACK TRANSACTION;
+    END
+END;
+```
+
+
+
+### 修改触发器(ALTER TRIGGER)
 1. 按创建触发器的步骤（1-3）定位到目标表
 2. 右击表 → "所有任务" → "管理触发器"
 3. 在"名称"框中选择现有触发器
@@ -1011,7 +1194,7 @@ RAISERROR (50009, 16, 10)
 GO
 ```
 
-### 如何删除触发器
+### 删除触发器(DROP TRIGGER)
 1. 按创建触发器的步骤（1-3）定位到目标表
 2. 右击表 → "所有任务" → "管理触发器"
 3. 选择要删除的触发器名称

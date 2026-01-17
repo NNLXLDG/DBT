@@ -1,3 +1,5 @@
+[TOC]
+
 # 关系数据库标准语言 - SQL
 
 SQL是结构化查询语言（Structured Query Language）的缩写，其功能包括数据查询、数据操纵、数据定义和数据控制四个部分。SQL 语言简洁、方便实用、功能齐全，已成为目前应用最广的关系数据库语言。
@@ -36,7 +38,7 @@ SQL语言支持数据库的三级模式结构。其中**外模式**对应于视�
 + SQL语言是一种面向集合的语言，每个命令的操作对象是一个或多个关系，结果也是一个关系。
 + SQL语言既是自含式语言，又是嵌入式语言。可独立使用，也可嵌入到宿主语言中。
   + 自含式语言可以独立使用交互命令，适用于终端用
-  户、应用程序员和DBA；（Demo）
+  户、应用程序员和DBA；
   + 嵌入式语言使其嵌入在高级语言中使用，供应用程
   序员开发应用程序。
 
@@ -45,15 +47,25 @@ SQL语言支持数据库的三级模式结构。其中**外模式**对应于视�
 ## SQL语言功能
 SQL语言具有:
 + 数据定义DDL（DEFINITION）
+  + CREATE
+  + ALTER
+  + DROP
 + 数据查询DQL（QUERY）
+  + SELECT
 + 数据操纵DML（MANIPULATION）
+  + INSERT
+  + UPDATE
+  + DELETE
 + 数据控制DCL（CONTROL）
+  + GRANT
+  + REVOKE
 
 四种语言一体化的功能。
 
 ![alt text](image-26.png)
 
-### 创建与管理数据库的
+
+### 创建与管理数据库(DDL)
 
 
 #### 数据库架构 SQL Server 2019
@@ -75,9 +87,9 @@ SQL Server 2019 数据库包含以下系统数据库：
 ![alt text](image-34.png)
 
 + Master：记录 SQL Server 系统的所有系统级信息的数据库。
-+ Model：在 SQL Server 实例上创建的所有数据库的模板。
-+ Msdb：SQL Server 代理用来安排警报和作业以及记录操作员信息的数据库。
-+ Tempdb：用于保存临时或中间结果集的工作空间。每次启动 SQL Server 实例时都会重新创建此数据库。服务器实例关闭时，将永久删除tempdb 中的所有数据
++ Model：在 SQL Server 实例上**创建的所有数据库的模板**。
++ Msdb：SQL Server 代理用来**安排警报和作业以及记录操作员信息**的数据库。
++ Tempdb：用于保存临时或中间结果集的工作空间。每次启动 SQL Server 实例时都会重新创建此数据库。**服务器实例关闭时，将永久删除tempdb 中的所有数据**。
 + Resource (RDB)：包含Microsoft SQL Server 2019 附带的所有系统对象副本的只读数据库。在安装目录的…\MSSQL\Binn目录下
 + Distribution
 只有将服务器配置为复制分发服务器时才存在此数据库。此数据库存储元数据、各种复制的历史记录数据以及用于事务复制的事务。
@@ -118,8 +130,144 @@ Database
 
 表属于 FILEGROUP，数据存到 FILE，一个 FILE 只能属于一个 FILEGROUP，PRIMARY 是默认 FILEGROUP，必须存在，不能删除
 
+**日志文件属于文件组吗**
 
-#### 1. 创建数据库
+日志文件不属于任何文件组。日志文件是数据库的一部分，但它们独立于数据文件和文件组进行管理。
+
+
+
+
+#### SQL server 核心组件
+
+SQL Server 以数据库引擎为核心提供数据存储与事务处理能力，并可选配 SSAS/SSRS/SSIS 等服务实现分析、报表与数据集成；通过 SSMS 等工具进行管理，借助 SQL Server Agent 实现数据库任务的计划与自动化执行。
+
+![alt text](image-116.png)
+
+##### SQL Server 数据库引擎（Database Engine）
+
+是什么？
+
+真正存数据、执行 SQL、保证事务/并发/恢复/安全的“发动机”。
+
+负责什么？
++ 存储：表/索引/视图/存储过程/触发器等
++ 查询：优化器生成执行计划、执行 SQL
++ 事务：ACID、锁、隔离级别、日志
++ 安全：登录、用户、权限
++ 备份恢复：full/diff/log
+
+负责操办接触到的：
++ CREATE TABLE / SELECT / JOIN / GROUP BY
++ 事务：BEGIN TRAN / COMMIT / ROLLBACK
++ 备份：BACKUP DATABASE、恢复：RESTORE
+
+##### 三大“服务”组件（跟引擎是并列的可选项）
+
+**Analysis Services（SSAS）——分析/多维/模型**
+
+做什么？
++ OLAP（多维分析）
++ Tabular 模型（类似数据仓库的分析模型）
++ 支持快速做“按维度汇总”的分析
+
+
+
+**Reporting Services（SSRS）——报表**
+
+做什么？
++ 把数据做成报表（参数报表、分页报表）
++ 发布到报表服务器给别人看
+
+会在哪看到？
+
+“报表系统”“打印报表”“权限控制的报表门户”。
+
+
+**Integration Services（SSIS）——ETL/数据集成**
+
+做什么？
++ 把数据从 A 导到 B（Excel→SQL、SQL→SQL、CSV→SQL）
++ 清洗转换数据（ETL：Extract/Transform/Load）
++ 定时跑导入任务
+
+会在哪看到？
+
+“导入导出 Excel”那块，本质就是 SSIS 能做的事（SSMS 的导入向导底层也和 SSIS 思路类似）。
+
+
+
+##### 管理工具
+
+###### SQL Server Management Studio（SSMS）
+
+干什么？
++ 连接实例、管理数据库对象
++ 写 SQL、执行查询
++ 备份/还原、查看作业、看表设计、权限管理
+
+考试/实验高频：
++ 对象资源管理器里看：数据库、表、视图、存储过程、代理作业
++ 右键数据库：属性/文件/文件组/备份/还原
+
+
+###### SQL Server 配置管理器（Configuration Manager）
+
+干什么？
++ 管服务：SQL Server 服务启动/停止
++ 管网络协议：TCP/IP 是否开启、端口号
++ 管客户端协议
+
+会用到的典型场景：
++ “为啥连不上 SQL Server？”→ 看 TCP/IP、服务是否启动
++ 改端口、启用远程连接
+
+###### SQL Server 事件探查器（Profiler）/ XEvent
+
+干什么？
++ 抓取 SQL 执行事件（谁在执行什么 SQL、耗时多少）
++ 用来排查性能问题、调试
+
+新版本更推荐 Extended Events（XEvent），Profiler 更像“老工具”。
+
+
+###### 数据库引擎优化顾问（DTA）
+
+干什么？
++ 根据你的查询工作负载，建议你建哪些索引、统计信息
++ 本质是“自动化的索引建议工具”
+
+
+###### SQL Server Data Tools（SSDT）
+
+干什么？
++ 在 Visual Studio 里做数据库开发
++ 管理数据库项目、版本控制、发布脚本（DevOps 风格）
+
+
+
+###### SQL 代理服务（SQL Server Agent）
+是什么？
+
+SQL Server 的“任务调度器/自动化执行器”。
+
+能干什么？
++ 定时备份数据库（你做的“每周日 00:00 全备”）
++ 定时执行 T-SQL（清理日志、统计、维护）
++ 跑 SSIS 包（ETL）
++ 发通知（邮件/警报）
+
+关键概念
++ Job（作业）：一个任务
++ Step（步骤）：作业里面每一步干什么（T-SQL/PowerShell/SSIS 等）
++ Schedule（计划）：什么时候运行（每天/每周/一次）
++ Operator/Alert（操作员/警报）：出错通知谁
+
+
+
+
+
+
+#### 1. 创建数据库（CREATE DATABASE）
 
 创建之前需要考虑的问题？
 + 数据库名字？
@@ -148,7 +296,7 @@ ALTER DATABASE eduDB MODIFY NAME = eduDB2;
 ```
 
 
-##### SQL Server Management Studio创建数据库 
+##### 用图形界面
 
 
 [数据库] -> 右键-> 新建数据库->属性设置
@@ -160,7 +308,8 @@ ALTER DATABASE eduDB MODIFY NAME = eduDB2;
 ![alt text](image-27.png)
 
 
-##### SQL DDL 
+##### 用SQL DDL
+ 
 创建数据库db_sale，要求
 1. 数据文件D:/Data，初始大小4M，增长方式2M
 2. 日志文件D:/Log，初始大小2M，增长方式10%
@@ -247,20 +396,60 @@ N'字符串' 表示这是一个 Unicode（NVARCHAR）字符串常量。在 SQL S
         ↓
      UTF-8 / UTF-16 / UTF-32（编码方式）
 ```
+
 > Unicode 是一种字符集标准，为世界上几乎所有文字和符号分配唯一的编号（码点）。UTF-8 是 Unicode 的一种变长编码方式，用 1–4 个字节表示一个字符。兼容 ASCII。二者的区别在于 Unicode 负责字符定义，而 UTF-8 负责字符的存储表示。
 > **变长**是指不同字符在存储时所占用的字节数不固定。UTF-32是定长编码，每个字符 4 字节。
 
 
-#### 2.查看数据库
-+ SQL SERVER Management Studio
-+ 调用系统存储过程sp_helpdb
+**char 是定长，varchar 是变长，nvarchar 是支持 Unicode 的变长字符类型。**
 
 
 
-#### 3.修改数据库
-+ SQL SERVER Management Studio
-+ SQL DDL
+```sql
+CHAR(10) 
+```
+不管你存几个字符,都固定占 10 个字符长度,空余部分用空格填充
+```sql
+VARCHAR(10) 
+```
+存几个字符,就占几个字符长度,不够就占用实际长度,不补空格,不支持 Unicode，最多存 10 个字符
+```sql
+NVARCHAR(10) 
+```
+存几个字符,就占几个字符长度,不够就占用实际长度,不补空格,支持 Unicode，最多存 10 个字符,每个字符占两个字节
 
+
+#### 2.查看数据库（sp_helpdb）
+
+调用系统存储过程sp_helpdb，sp_helpdb 是 SQL Server **自带的系统存储过程**，用来查看数据库的基本信息 + 文件信息。
+
+
+sp_helpdb 能回答很多“数据库体检”问题：
++ 数据库有哪些？
++ 某个数据库当前状态（ONLINE/OFFLINE/RESTORING…）
++ 数据库大小是多少？
++ 数据库的数据文件/日志文件在哪？属于哪个 filegroup？
++ 兼容级别、排序规则、所有者等
+
+```sql
+EXEC sp_helpdb;
+```
+![alt text](image-113.png)
+
+查看指定数据库的信息
+```sql
+EXEC sp_helpdb 'eduDB';
+```
+![alt text](image-114.png)
+
+更现代的方式
+```sql  
+SELECT name, type_desc, physical_name, size
+FROM sys.database_files;
+```
+
+
+#### 3.修改数据库（ALTER DATABASE）
 ALTER DATABASE 用于修改已有数据库的结构和属性，例如文件、文件组、名称、选项和排序规则。
 
 
@@ -302,33 +491,102 @@ ALTER DATABASE database
 
 
 
-例子：给数据库 db_sale 添加一个数据文件到文件组 FG_SALES
+**例子：**
+
+新增文件组,文件组只是“逻辑容器”，还没文件
+```sql
+ALTER DATABASE eduDB
+ADD FILEGROUP FG_Data;
 ```
-ALTER DATABASE db_sale
+
+给数据库 db_sale 添加一个数据文件到文件组 FG_SALES
+```sql
+ALTER DATABASE eduDB
 ADD FILE
 (
-    NAME = db_sale_ndf1,
-    FILENAME = 'D:\Data\db_sale_1.ndf',
-    SIZE = 100MB
+    NAME = 'eduDB_Data2',
+    FILENAME = 'D:\Data\eduDB_Data2.ndf',
+    SIZE = 10MB,
+    FILEGROWTH = 5MB
 )
-TO FILEGROUP FG_SALES;
+TO FILEGROUP FG_Data;
 ```
 
-
-
-#### 4.删除数据库
-+ SQL SERVER Management Studio
-+ SQL DDL
-
+新增日志文件（ADD LOG FILE）
+```sql
+ALTER DATABASE eduDB
+ADD LOG FILE
+(
+    NAME = 'eduDB_Log2',
+    FILENAME = 'D:\Log\eduDB_Log2.ldf',
+    SIZE = 5MB,
+    FILEGROWTH = 10%
+);
 ```
+
+修改文件属性
+```sql
+ALTER DATABASE eduDB
+MODIFY FILE
+(
+    NAME = 'eduDB_Data2',
+    FILEGROWTH = 20MB
+);
+```
+
+删除数据文件
+```sql
+ALTER DATABASE eduDB
+REMOVE FILE eduDB_Data2;
+```
+
+修改数据库名
+```sql
+ALTER DATABASE eduDB
+MODIFY NAME = eduDB_New;
+```
+
+修改默认文件夹组
+```sql
+ALTER DATABASE eduDB
+MODIFY FILEGROUP FG_Data DEFAULT;
+```
+
+重命名文件夹组
+```sql
+ALTER DATABASE eduDB
+MODIFY FILEGROUP FG_Data
+NAME = FG_Data_New;
+```
+
+删除文件组
+```sql
+ALTER DATABASE eduDB
+REMOVE FILEGROUP FG_Data;
+```
+
+#### 4.删除数据库（DROP DATABASE）
+
+```sql
 DROP DATABASE database_name
 [ ,...n ]
 ```
+DROP DATABASE 会永久删除数据库及其所有对象和数据，且不可回滚。如果有人正在连接该数据库，会报错。
+
+**DROP DATABASE 是自动提交的语句。**
+
+删除数据库会同步删除表、视图、索引、存储过程，并删除数据文件（mdf/ndf/ldf），所以 误删数据库 = 文件也没了。
+
+支持删除多个数据库
+```sql
+DROP DATABASE db1, db2;
+```
+
+master,model,msdb,empdb是不可以被删除的
 
 
-#### 5.压缩数据库
-+ SQL SERVER Management Studio
-+ SQL DDL
+#### 5.压缩数据库（DBCC SHRINKDATABASE）
+
 
 ```sql
 DBCC SHRINKDATABASE
@@ -355,20 +613,22 @@ DBCC SHRINKDATABASE
 
 数据库文件（mdf / ndf / ldf）可能变得很大，但里面其实有很多空闲空间。DBCC SHRINKDATABASE 的作用就是：把这些空闲空间“挤掉”，让数据库文件变小。
 
-数据库收缩可能导致索引碎片，实际生产环境中应谨慎使用。
+DBCC SHRINKDATABASE 不应频繁使用，只适合临时或一次性回收空间。
 
 
+SHRINK 会 移动数据页，索引的物理顺序被打乱，导致：
++ 查询性能下降
++ 索引扫描效率变差
 
 
+Shrink 后通常需要重建索引
+```sql
+ALTER INDEX ALL ON table_name REBUILD;
+```
+只有在大量数据永久删除后,且 磁盘空间确实需要回收 才考虑
 
 
-
-
-
-
-
-
-#### 关系数据库定义
+#### 关系数据库定义(RDBMS)
 
 创建数据库
 + 若要创建数据库，必须至少拥有 CREATE DATABASE、CREATE ANY DATABASE或 ALTER ANY DATABASE 权限。
@@ -377,7 +637,7 @@ DBCC SHRINKDATABASE
 + 数据库名称必须遵循为标识符指定的规则。
 + model 数据库中的所有用户定义对象都将复制到所有新创建的数据库中。
 
-
+**创建者默认成为数据库所有者（dbo），但	DBA 可以在创建后更改 owner**
 
 SQL Server 2019标识符，下列规则适用：
 + 第一个字符必须是下列字符之一：
@@ -391,7 +651,19 @@ SQL Server 2019标识符，下列规则适用：
 + 不允许嵌入空格或其他特殊字符。
 
 
-### 创建、修改和删除数据表
+技术上往往
+```
+@xxx → 变量名
+#xxx → 临时表名
+```
+下面这个例子中，虽然标识符不能加空格，但是加了中括号之后是合法的
+```sql
+CREATE TABLE [Student Info] (...);  -- ✔ 合法
+```
+
+
+### 创建、修改和删除数据表（CREATE, ALTER, DROP TABLE）（DDL）
+
 
 #### 0.数据类型
 
@@ -443,11 +715,11 @@ EXEC sp_helptext 'sp_addtype’
 
 
 
-#### 1.创建数据表
+#### 1.创建数据表（CREATE TABLE）
 数据表是关系数据库的基本组成单位，它物理地存储于数据库的存储文件中。
 
 创建一个数据表时主要包括以下几个组成部分：
-+ 字段名（列名）：字段名可长达128个字符。字段名可包含中文、英文字母、下划线、#号、货币符号（$）及AT符号(@)。同一表中不许有重名列；
++ **字段名（列名）**：字段名可长达128个字符。字段名**可包含中文、英文字母、下划线、#号、货币符号（$）及AT符号(@**)。**同一表中不许有重名列**；
 + 字段数据类型；
 + 字段的长度、精度和小数位数；
 + NULL值与DEFAULT值：DEFAULT值表示某一字段的默认值，当没有输入数据时，则使用此默认的值。
@@ -456,12 +728,12 @@ EXEC sp_helptext 'sp_addtype’
 
 
 
-> 字段的长度：指字段所能容纳的最大数据量，但对不同的数据类型来说，长度对字段的意义可能有些不同。
+> **字段的长度**：指字段所能容纳的最大数据量，但对不同的数据类型来说，长度对字段的意义可能有些不同。
 >  + 对字符串与UNICODE数据类型而言，长度代表字段所能容纳的字符的数目，因此它会限制用户所能输入的文本长度。
 >  + 对数值类的数据类型而言，长度则代表字段使用多少个字节来存放数字。
 >  + 对BINARY、VARBINARY、IMAGE数据类型而言，长度代表字段所能容纳的字节数。
 > 
-> 精度和小数位数
+> **精度和小数位数**
 > + 精度是指数中数字的位数，包括小数点左侧的整数部分和小数点右侧的小数部分；
 > + 小数位数则是指数字小数点右侧的位数。
 > + 例如：数字12345.678，其精度为8，小数位数为3；
@@ -477,11 +749,12 @@ EXEC sp_helptext 'sp_addtype’
 + 如：如果某字段采用INT数据类型，其长度固定是4，精度固定是10，小数位数则固定是0，这表示字段将能存放10位数没有小数点的整数。存储大小则是4个字节。
 
 
-
 ##### 创建数据表的SQL语法格式
 
-在SQL语言中，使用语句CREATE TABLE创建数据表，其基本语
-法格式为：
+建表时必须先确定字段、数据类型和约束，主键唯一、外键一致、NULL 与默认值要合理。
+
+
+在SQL语言中，使用语句CREATE TABLE创建数据表，其基本语法格式为：
 ```sql
 CREATE TABLE [ database_name . [ schema_name ] . |
 schema_name . ] <表名>
@@ -493,8 +766,7 @@ schema_name . ] <表名>
 )
 [ON {文件组|默认文件组}]
 ```
-+ <表名>是合法标识符，最多可有128个字符，如S,SC,C，不允
-许重名。
++ <表名>是合法标识符，最多可有128个字符，如S,SC,C，不允许重名。
 + <列定义>：<列名><数据类型>[DEFAULT] [{<列约束>}]
   + DEFAULT：若是某字段设置有默认值，当该字段未被输入数据时，则以该默认值自动填入该字段。`gender CHAR(1) DEFAULT 'M'`
   + 例如 `age INT DEFAULT 18 NOT NULL`
@@ -516,7 +788,8 @@ CREATE TABLE dbo.student
         REFERENCES class(id)
 );
 ```
-+ `CONSTRAINT pk_student PRIMARY KEY (id)`是主键约束（PRIMARY KEY）
++ `CONSTRAINT pk_student PRIMARY KEY (id)`是主键约束（PRIMARY KEY），**主键字段必须 NOT NULL**，一个表只能有一个主键，SQL Server 会自动创建索引
++ 未写 NOT NULL 的字段，默认允许 NULL，	DEFAULT ≠ NOT NULL，仍然可以插入 NULL
 + dbo 是 SQL Server 中的默认架构（Schema），dbo 是系统默认的 schema 名称
 ```
 数据库
@@ -529,7 +802,7 @@ CONSTRAINT fk_class
 FOREIGN KEY (class_id)
 REFERENCES class(id)
 ```
-
+这句话规定了 student 表中的 class_id 必须来自 class 表中的 id。
 
 ##### 定义完整性约束
 
@@ -591,17 +864,44 @@ REFERENCES class(id)
     [CONSTRAINT <约束名>] FOREIGN KEY
     REFERENCES <主表名> (<列名>[{<列名>}])
     ```
+  + **被引用字段必须是 PRIMARY KEY 或 UNIQUE**，以保证外键引用的目标必须是“能唯一定位一行”的键。
 
 
 + **CHECK约束**
-  + CHECK约束用来检查字段值所允许的范围，如，一个字段只能输入整数，而且限定在0-100的整数，以此来保证域的完整性。
+  + CHECK约束用来检查字段值所允许的范围，如，一个字段只能输入整数，而且限定在0-100的整数，以此来保证域的完整性。**CHECK 不检查 NULL**。
   + CHECK既可用于列约束，也可用于表约束，
   + 其语法格式为：`[CONSTRAINT <约束名>] CHECK (<条件>)`
 
 
 
+例子：
 
-#### 2.修改基本表
+
+**外键的例子**
+
+先写主表
+```sql
+CREATE TABLE class(
+  id INT PRIMARY KEY,
+  name NVARCHAR(20) NOT NULL
+);
+```
+再写从表
+```sql
+CREATE TABLE student(
+  id INT PRIMARY KEY,
+  name NVARCHAR(20) NOT NULL,
+  class_id INT NULL,
+  CONSTRAINT fk_student_class
+    FOREIGN KEY(class_id) REFERENCES class(id)
+);
+```
+
+
+
+
+
+#### 2.修改基本表（ALTER TABLE...ADD,ALTER, DROP）
 由于应用环境和应用需求的变化，经常需要修改基本表的结构，比如，增加新列和完整性约束、修改原有的列定义和完整性约束等。SQL语言使用ALTER TABLE命令来完成这一功能，有如下三种修改方式：
 
 
@@ -653,7 +953,7 @@ ALTER TABLE<表名>
 DROP CONSTRAINT <约束名>
 ```
 
-这里只能 DROP 约束，不能 DROP 列，删除列用 DROP COLUMN
+这里只能 DROP 约束，不能 DROP 列，**删除列用 DROP COLUMN**
 ```sql
 ALTER TABLE student
 DROP COLUMN email;
@@ -690,11 +990,11 @@ DROP TABLE <表名>
 
 SQL语言的数据更新语句DML主要包括插入数据、修改数据和删除数据三种语句。
 
-#### 1 插入数据记录
+#### 1 插入数据记录（INSERT INTO）
 插入数据是把新的记录插入到一个存在的表中。插入数据使用语句INSERT INTO，可分为以下几种情况。
 
 
-**插入一行新记录**
+##### 插入一行新记录
 
 
 语法格式为：
@@ -715,7 +1015,7 @@ VALUES ('s7','郑冬','女',21,'计算机')
 + INTO子句中没有指定列名，则新插入的记录必须在每个属性列上均有值，且VALUES子句中值的排列顺序要和表中各属性列的排列顺序一致。
 
 
-**插入一行的部分数据值**
+##### 插入一行的部分数据值
 
 在SC表中插入一条选课记录（’S7’,’C1’）。
 ```sql
@@ -728,7 +1028,7 @@ VALUES ('s7','c1')
 + 但在表定义时有NOT NULL约束的属性列不能取空值。
 
 
-**插入多行记录**
+##### 插入多行记录
 
 + 用于表间的拷贝，将一个表中的数据抽取数行插入另一表中，可以通过子查询来实现。
 + 插入数据的命令语法格式为：
@@ -754,7 +1054,7 @@ GROUP BY department;
 ```
 
 
-#### 2 修改数据记录
+#### 2 修改数据记录（UPDATE）
 SQL语言可以使用UPDATE语句对表中的一行或多行记录的某些列值进行修改，其语法格式为：
 ```sql
 UPDATE <表名>
@@ -767,7 +1067,7 @@ SET <列名>=<表达式> [,<列名>=<表达式>]…
 + WHERE子句指定待修改的记录应当满足的条件，WHERE子句省略时，则修改表中的所有记录。
 
 
-**修改一行**
+##### 修改一行
 
 例 把刘伟教师转到信息系。
 ```sql
@@ -776,7 +1076,7 @@ UPDATE T
 WHERE TN='刘伟'
 ```
 
-**修改多行**
+##### 修改多行
 
 例 将所有学生年龄增加1岁
 ```sql
@@ -793,7 +1093,7 @@ WHERE PROF=‘教授'
 ```
 
 
-**用子查询选择要修改的行**
+##### 用子查询选择要修改的行
 
 例 把讲授C5课程的教师的岗位津贴增加100元。
 ```sql
@@ -808,7 +1108,7 @@ UPDATE T
 子查询的作用是得到讲授C5课程的教师号。
 
 
-**用子查询提供要修改的值**
+##### 用子查询提供要修改的值
 
 例 把所有教师的工资提高到平均工资的1.2倍
 ```sql
@@ -820,7 +1120,7 @@ SET SAL =
 
 子查询的作用是得到所有教师的平均工资。
 
-#### 3.删除数据记录
+#### 3.删除数据记录（DELETE）
 使用DELETE语句可以删除表中的一行或多行记录，其语法格式为：
 ```
 DELETE
@@ -831,7 +1131,7 @@ DELETE
 + <表名>是指要删除数据的表。
 + WHERE子句指定待删除的记录应当满足的条件，WHERE子句省略时，则删除表中的所有记录。
 
-**删除一行记录**
+##### 删除一行记录
 
 例 删除刘伟教师的记录。
 ```sql
@@ -840,7 +1140,7 @@ FROM T
 WHERE TN=’刘伟’
 ```
 
-**删除多行记录**
+##### 删除多行记录
 
 例 删除所有教师的授课记录
 ```sql
@@ -849,7 +1149,7 @@ FROM TC
 ```
 执行此语句后，TC表即为一个空表，但其定义仍存在数据字典中。
 
-**利用子查询选择要删除的行**
+##### 利用子查询选择要删除的行
 
 例 删除刘伟教师授课的记录。
 ```sql
@@ -864,8 +1164,9 @@ WHERE TNO=
 
 
 
-### 设计、创建和维护索引
+### 设计、创建和维护索引(DDL)
 
+![alt text](image-117.png)
 
 #### 索引的作用
 在日常生活中我们会经常遇到索引，例如图书目录、词典索引等。借助索引，人们会很快地找到需要的东西。索引是数据库随机检索的常用手段，它实际上就是记录的关键字与其相应地址的对应表。
@@ -880,9 +1181,9 @@ WHERE TNO=
 
 
 #### 索引的分类
-+ 按照索引记录的存放位置可分为聚集索引与非聚集索引
++ 按照索引记录的存放位置可分为**聚集索引与非聚集索引**
   + 聚集索引：按照索引的字段排列记录，并且依照排好的
-  顺序将记录存储在表中。表中数据 按索引键顺序实际存放，一张表只能有一个聚集索引，常建在PRIMARY KEY 上。
+  顺序将记录存储在表中。表中数据 按索引键顺序实际存放，**一张表只能有一个聚集索引，常建在PRIMARY KEY 上。**
   + 非聚集索引：按照索引的字段排列记录，但是排列的结
   果并不会存储在表中，而是另外存储。索引和数据分离，一张表可以有多个
 + 唯一索引的概念
@@ -899,7 +1200,8 @@ UNIQUE 和 PRIMARY KEY 的关系
 ![alt text](image-39.png)
 
 
-#### 建立索引
+#### 建立索引(CREATE INDEX)
+
 CREATE INDEX 语句用于在表或视图上创建索引，以提高查询性能。建立索引的语句是CREATE INDEX，其语法格式为：
 ```sql
 CREATE [UNIQUE] [CLUSTERED|NONCLUSTERED]
@@ -978,8 +1280,7 @@ pad_index,fillfactor=100 --填充因子为100
 
 注：100%的填充因子可以提升读取的性能，但是会减慢写活动的性能，引发频繁的页拆分，参考：低更改的表：100%的填充因子，高更改的表50-70%的填充因子，读写各一半的表80-90%的填充因子。
 
-示例 7:为数据库“eduDB”中的数据表关于c.课程名降序建立唯一索
-引IN_课程名。
+示例 7:为数据库“eduDB”中的数据表关于c.课程名降序建立唯一索引IN_课程名。
 
 ```sql    
 USE eduDB
@@ -995,7 +1296,8 @@ INDEX IN_CNAME on c(CNAME desc)
 
 
 
-#### 删除索引
+#### 删除索引(DROP INDEX)
+
 建立索引是为了提高查询速度，但随着索引的增多，数据更新时，系统会花费许多时间来维护索引。这时，应删除不必要的索引。
 
 删除索引的语句是DROP INDEX，其语法格式为：
